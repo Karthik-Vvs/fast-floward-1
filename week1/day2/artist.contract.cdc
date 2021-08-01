@@ -1,11 +1,11 @@
 pub contract Artist {
   pub struct Canvas {
 
-    pub let width: UInt8
-    pub let height: UInt8
+    pub let width: Int
+    pub let height: Int
     pub let pixels: String
 
-    init(width: UInt8, height: UInt8, pixels: String) {
+    init(width: Int, height: Int, pixels: String) {
       self.width = width
       self.height = height
       // The following pixels
@@ -30,11 +30,11 @@ pub contract Artist {
 
   pub resource Printer {
 
-    pub let width: UInt8
-    pub let height: UInt8
+    pub let width: Int
+    pub let height: Int
     pub let prints: {String: Canvas}
 
-    init(width: UInt8, height: UInt8) {
+    init(width: Int, height: Int) {
       self.width = width;
       self.height = height;
       self.prints = {}
@@ -67,18 +67,28 @@ pub contract Artist {
 
   // Quest W1Q3
   pub resource Collection {
-    pub let pictureMap: @{String: Picture}
+    pub let pictures: @[Picture]
 
     pub fun deposit(picture: @Picture) {
-      self.pictureMap[picture.id] <-! picture 
+      self.pictures.append(<-picture)
+    }
+
+    pub fun getCanvases(): [Canvas] {
+        let canvases: [Canvas] = []
+        var index = 0
+        while(index < self.pictures.length) {
+            canvases.append(self.pictures[index].canvas)
+            index = index + 1
+        }
+        return canvases
     }
 
     init() {
-      self.pictureMap <- {}
+      self.pictures <- []
     }
 
     destroy() {
-      destroy self.pictureMap
+      destroy self.pictures
     }
   }
   pub fun createCollection(): @Collection {
@@ -94,8 +104,5 @@ pub contract Artist {
       /public/ArtistPicturePrinter,
       target: /storage/ArtistPicturePrinter
     )
-
-    self.account.save(<- create Collection(), to: /storage/ArtistPictureCollection)
-    self.account.link<&Artist.Collection>(/public/ArtistPictureCollection, target: /storage/ArtistPictureCollection)
   }
 }
